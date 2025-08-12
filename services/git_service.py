@@ -41,14 +41,83 @@ class GitService:
     def add_files(self, project_path):
         if not project_path or not os.path.exists(project_path):
             return {'success': False, 'error': 'Invalid project path'}
+        
+        # First check if there are files to add
+        status_result = run_command('git status --porcelain', cwd=project_path)
+        if not status_result['success']:
+            return {'success': False, 'error': 'Failed to check git status'}
+        
+        # Check for unstaged changes (second character not space, or untracked files)
+        has_unstaged = False
+        if status_result['stdout']:
+            for line in status_result['stdout'].strip().split('\n'):
+                if line.startswith('??') or (len(line) >= 2 and line[1] in ['M', 'D']):
+                    has_unstaged = True
+                    break
+        
+        if not has_unstaged:
+            return {'success': False, 'error': 'No unstaged changes to add'}
+        
         result = run_command('git add .', cwd=project_path)
-        return {'success': result['success'], 'message': 'Files added to git' if result['success'] else result['stderr']}
+        if result['success']:
+            # Count how many files were added
+            after_status = run_command('git status --porcelain', cwd=project_path)
+            staged_count = 0
+            if after_status['success'] and after_status['stdout']:
+                for line in after_status['stdout'].strip().split('\n'):
+                    if len(line) >= 2 and line[0] in ['A', 'M', 'D', 'R', 'C']:
+                        staged_count += 1
+            
+            return {'success': True, 'message': f'{staged_count} file(s) staged for commit'}
+        else:
+            return {'success': False, 'error': f'Failed to add files: {result["stderr"]}'}
     
     def commit_changes(self, project_path, message='Auto commit'):
         if not project_path or not os.path.exists(project_path):
             return {'success': False, 'error': 'Invalid project path'}
-        result = run_command(f'git commit -m "{message}"', cwd=project_path)
-        return {'success': result['success'], 'message': 'Changes committed' if result['success'] else result['stderr']}
+        
+        # Check if git is configured
+        email_result = run_command('git config user.email', cwd=project_path)
+        name_result = run_command('git config user.name', cwd=project_path)
+        
+        if not email_result['success'] or not email_result['stdout']:
+            run_command(f'git config user.email "{self.git_email}"', cwd=project_path)
+        if not name_result['success'] or not name_result['stdout']:
+            run_command(f'git config user.name "{self.git_name}"', cwd=project_path)
+        
+        # Check if there are staged changes to commit
+        status_result = run_command('git status --porcelain', cwd=project_path)
+        if not status_result['success']:
+            return {'success': False, 'error': 'Failed to check git status'}
+        
+        # Check for staged changes (first character not space)
+        staged_changes = False
+        if status_result['stdout']:
+            for line in status_result['stdout'].strip().split('\n'):
+                if len(line) >= 2 and line[0] in ['A', 'M', 'D', 'R', 'C']:
+                    staged_changes = True
+                    break
+        
+        if not staged_changes:
+            return {'success': False, 'error': 'No staged changes to commit. Run "Add Changes" first.'}
+        
+        # Escape quotes in commit message
+        safe_message = message.replace('"', '\\"')
+        result = run_command(f'git commit -m "{safe_message}"', cwd=project_path)
+        
+        if result['success']:
+            return {'success': True, 'message': 'Changes committed successfully'}
+        else:
+            # Provide more specific error messages
+            error_msg = result['stderr']
+            if 'nothing to commit' in error_msg:
+                return {'success': False, 'error': 'No changes to commit'}
+            elif 'Please tell me who you are' in error_msg:
+                return {'success': False, 'error': 'Git user not configured'}
+            elif 'Aborting commit due to empty commit message' in error_msg:
+                return {'success': False, 'error': 'Commit message cannot be empty'}
+            else:
+                return {'success': False, 'error': f'Commit failed: {error_msg}'}
     
     def get_status(self, project_path):
         if not project_path or not os.path.exists(project_path):
