@@ -43,16 +43,17 @@ def get_git_status(project_path):
             if unstaged_status in ['M', 'D'] or line.startswith('??'):
                 has_unstaged_changes = True
     
-    # Determine if repo needs fixing
+    # Determine if repo needs fixing (only when no active changes)
     needs_fix = False
     fix_reason = ""
     
-    if not has_commits:
-        needs_fix = True
-        fix_reason = "No commits (empty repo)"
-    elif not has_remote:
-        needs_fix = True
-        fix_reason = "No GitHub remote"
+    if not has_unstaged_changes and not has_staged_changes:
+        if not has_commits:
+            needs_fix = True
+            fix_reason = "No commits (empty repo)"
+        elif not has_remote:
+            needs_fix = True
+            fix_reason = "No GitHub remote"
     
     return {
         'hasGit': True,
