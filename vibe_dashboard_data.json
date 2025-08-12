@@ -1,0 +1,150 @@
+{
+  "projects": [
+    {
+      "name": "agentic-board",
+      "path": "/Volumes/BaseHDD/python/agentic-board",
+      "type": "folder",
+      "venv": {
+        "exists": true,
+        "active": false,
+        "path": "/Volumes/BaseHDD/python/agentic-board/venv"
+      },
+      "git": {
+        "hasGit": true,
+        "branch": "upgrade1",
+        "hasChanges": false,
+        "hasRemote": true,
+        "lastCommit": "df879eb Initial commit: refactored Agentic Board with MVU/event-bus architecture and streaming agent windows"
+      },
+      "lastModified": "3 days ago",
+      "pythonFiles": 9,
+      "favorite": false
+    },
+    {
+      "name": "claude_dashboard",
+      "path": "/Volumes/BaseHDD/python/claude_dashboard",
+      "type": "folder",
+      "venv": {
+        "exists": true,
+        "active": true,
+        "path": "/Volumes/BaseHDD/python/claude_dashboard/venv"
+      },
+      "git": {
+        "hasGit": true,
+        "branch": "main",
+        "hasChanges": true,
+        "hasRemote": false,
+        "lastCommit": ""
+      },
+      "lastModified": "2 minutes ago",
+      "pythonFiles": 2,
+      "favorite": false
+    },
+    {
+      "name": "scaffold_agentic_board.py",
+      "path": "/Volumes/BaseHDD/python/scaffold_agentic_board.py",
+      "type": "file",
+      "venv": {
+        "exists": false,
+        "active": false
+      },
+      "git": {
+        "hasGit": false
+      },
+      "lastModified": "3 days ago",
+      "size": 14628,
+      "favorite": false
+    },
+    {
+      "name": "20250808.project_snapshot",
+      "path": "/Volumes/BaseHDD/python/20250808.project_snapshot",
+      "type": "folder",
+      "venv": {
+        "exists": false,
+        "active": false,
+        "path": "/Volumes/BaseHDD/python/20250808.project_snapshot/venv"
+      },
+      "git": {
+        "hasGit": true,
+        "branch": "main",
+        "hasChanges": true,
+        "hasRemote": false,
+        "lastCommit": ""
+      },
+      "lastModified": "4 days ago",
+      "pythonFiles": 1,
+      "favorite": false
+    },
+    {
+      "name": "20250808.IDE",
+      "path": "/Volumes/BaseHDD/python/20250808.IDE",
+      "type": "folder",
+      "venv": {
+        "exists": false,
+        "active": false,
+        "path": "/Volumes/BaseHDD/python/20250808.IDE/venv"
+      },
+      "git": {
+        "hasGit": false
+      },
+      "lastModified": "3 days ago",
+      "pythonFiles": 1,
+      "favorite": false
+    },
+    {
+      "name": "20250731.Anavi",
+      "path": "/Volumes/BaseHDD/python/20250731.Anavi",
+      "type": "folder",
+      "venv": {
+        "exists": true,
+        "active": false,
+        "path": "/Volumes/BaseHDD/python/20250731.Anavi/venv"
+      },
+      "git": {
+        "hasGit": false
+      },
+      "lastModified": "Jul 31",
+      "pythonFiles": 2,
+      "favorite": false
+    },
+    {
+      "name": "20250727.StructureEmails",
+      "path": "/Volumes/BaseHDD/python/20250727.StructureEmails",
+      "type": "folder",
+      "venv": {
+        "exists": false,
+        "active": false,
+        "path": "/Volumes/BaseHDD/python/20250727.StructureEmails/venv"
+      },
+      "git": {
+        "hasGit": false
+      },
+      "lastModified": "1 day ago",
+      "pythonFiles": 3382,
+      "favorite": false
+    }
+  ],
+  "snippets": [
+    {
+      "id": 1,
+      "title": "Virtual Environment Setup",
+      "code": "# Create and activate venv\npython -m venv venv\nsource venv/bin/activate  # macOS/Linux\n# pip install -r requirements.txt",
+      "tags": [
+        "venv",
+        "setup"
+      ],
+      "created": "2025-08-12T13:47:10.279787"
+    },
+    {
+      "id": 2,
+      "title": "Quick DataFrame Info",
+      "code": "import pandas as pd\n\n# Quick data overview\ndf.info()\nprint(f\"Shape: {df.shape}\")\nprint(f\"Nulls: {df.isnull().sum().sum()}\")",
+      "tags": [
+        "pandas",
+        "data-analysis"
+      ],
+      "created": "2025-08-12T13:47:10.279799"
+    }
+  ],
+  "sessions": []
+}
