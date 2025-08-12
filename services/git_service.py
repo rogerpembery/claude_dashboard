@@ -10,6 +10,13 @@ class GitService:
         self.github_username = github_username
         self.github_token = github_token
     
+    def reload_credentials(self, git_name, git_email, github_username, github_token):
+        """Reload credentials after fallback or update"""
+        self.git_name = git_name
+        self.git_email = git_email
+        self.github_username = github_username
+        self.github_token = github_token
+    
     def init_repository(self, project_path):
         if not project_path or not os.path.exists(project_path):
             return {'success': False, 'error': 'Invalid project path'}
@@ -184,10 +191,12 @@ class GitService:
         
         if update_env_with_fallback(current_env_path, fallback_creds):
             # Update our instance with new credentials
-            self.github_token = fallback_creds['GITHUB_TOKEN']
-            self.github_username = fallback_creds['GITHUB_USERNAME']
-            self.git_email = fallback_creds.get('GIT_EMAIL', self.git_email)
-            self.git_name = fallback_creds.get('GIT_NAME', self.git_name)
+            self.reload_credentials(
+                fallback_creds.get('GIT_NAME', self.git_name),
+                fallback_creds.get('GIT_EMAIL', self.git_email), 
+                fallback_creds['GITHUB_USERNAME'],
+                fallback_creds['GITHUB_TOKEN']
+            )
             
             # Retry the GitHub repository creation
             payload = {"name": repo_name, "description": description or f'Python project: {repo_name}', "private": False}
