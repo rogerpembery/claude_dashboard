@@ -19,10 +19,31 @@ def get_git_status(project_path):
     status_result = run_command('git status --porcelain', cwd=project_path)
     remote_result = run_command('git remote -v', cwd=project_path)
     
+    # Parse git status to differentiate between staged and unstaged changes
+    status_lines = status_result['stdout'].strip().split('\n') if status_result['stdout'] else []
+    
+    has_unstaged_changes = False
+    has_staged_changes = False
+    
+    for line in status_lines:
+        if len(line) >= 2:
+            staged_status = line[0]  # First character: staged changes
+            unstaged_status = line[1]  # Second character: unstaged changes
+            
+            # Check for staged changes (ready to commit)
+            if staged_status in ['A', 'M', 'D', 'R', 'C']:
+                has_staged_changes = True
+            
+            # Check for unstaged changes (need to add)
+            if unstaged_status in ['M', 'D'] or line.startswith('??'):
+                has_unstaged_changes = True
+    
     return {
         'hasGit': True,
         'branch': branch_result['stdout'] if branch_result['success'] else 'main',
-        'hasChanges': bool(status_result['stdout']) if status_result['success'] else False,
+        'hasChanges': has_unstaged_changes or has_staged_changes,
+        'hasUnstagedChanges': has_unstaged_changes,
+        'hasStagedChanges': has_staged_changes,
         'hasRemote': bool(remote_result['stdout']) if remote_result['success'] else False,
         'lastCommit': ''
     }
