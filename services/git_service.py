@@ -1,6 +1,7 @@
 import os
 import json
 from utils.command_runner import run_command
+from utils.credential_fallback import find_working_github_credentials, update_env_with_fallback
 
 class GitService:
     def __init__(self, git_name, git_email, github_username, github_token):
@@ -80,6 +81,13 @@ class GitService:
         cmd = f'''curl -s -H "Authorization: token {self.github_token}" -H "Content-Type: application/json" -d '{json.dumps(payload)}' https://api.github.com/user/repos'''
         result = run_command(cmd)
         
+        # Check for authentication errors
+        if not result['success'] or 'Bad credentials' in result['stdout'] or 'Unauthorized' in result['stdout']:
+            # Try to find working credentials from other projects
+            fallback_result = self._try_fallback_credentials(project_path, repo_name, description)
+            if fallback_result:
+                return fallback_result
+        
         if result['success']:
             try:
                 data = json.loads(result['stdout'])
@@ -92,6 +100,43 @@ class GitService:
             except:
                 return {'success': False, 'error': 'Failed to parse GitHub response'}
         return {'success': False, 'error': result['stderr']}
+    
+    def _try_fallback_credentials(self, project_path, repo_name, description):
+        """Try to use working credentials from other projects"""
+        fallback_creds = find_working_github_credentials()
+        
+        if not fallback_creds:
+            return {'success': False, 'error': 'Authentication failed and no working credentials found in other projects'}
+        
+        # Update current .env file with working credentials
+        current_env_path = os.path.join(os.path.dirname(project_path), '.env')
+        if not os.path.exists(current_env_path):
+            current_env_path = os.path.join(project_path, '.env')
+        
+        if update_env_with_fallback(current_env_path, fallback_creds):
+            # Update our instance with new credentials
+            self.github_token = fallback_creds['GITHUB_TOKEN']
+            self.github_username = fallback_creds['GITHUB_USERNAME']
+            self.git_email = fallback_creds.get('GIT_EMAIL', self.git_email)
+            self.git_name = fallback_creds.get('GIT_NAME', self.git_name)
+            
+            # Retry the GitHub repository creation
+            payload = {"name": repo_name, "description": description or f'Python project: {repo_name}', "private": False}
+            cmd = f'''curl -s -H "Authorization: token {self.github_token}" -H "Content-Type: application/json" -d '{json.dumps(payload)}' https://api.github.com/user/repos'''
+            result = run_command(cmd)
+            
+            if result['success']:
+                try:
+                    data = json.loads(result['stdout'])
+                    if 'html_url' in data:
+                        remote_url = data['clone_url'].replace('https://', f'https://{self.github_username}:{self.github_token}@')
+                        run_command(f'git remote add origin {remote_url}', cwd=project_path)
+                        run_command('git branch -M main', cwd=project_path)
+                        return {'success': True, 'message': f'GitHub repository created using fallback credentials from {fallback_creds["source_file"]}', 'url': data['html_url']}
+                except:
+                    pass
+        
+        return None
     
     def fix_repository(self, project_path):
         """Fix git repositories that have issues (no commits or no remote)"""
