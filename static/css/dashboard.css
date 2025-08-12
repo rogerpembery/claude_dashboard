@@ -1,34 +1,7 @@
-.tab-active { 
-    background-color: white; 
-    color: #2563eb; 
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
-}
-
 .project-card { 
-    transition: all 0.2s; 
+    transition: transform 0.2s; 
 }
 
 .project-card:hover { 
     transform: translateY(-1px); 
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
-}
-
-.status-indicator { 
-    width: 8px; 
-    height: 8px; 
-    border-radius: 50%; 
-    display: inline-block; 
-    margin-right: 4px; 
-}
-
-.status-active { 
-    background-color: #10b981; 
-}
-
-.status-inactive { 
-    background-color: #6b7280; 
-}
-
-.status-changes { 
-    background-color: #f59e0b; 
 }
