@@ -137,6 +137,19 @@ class GitService:
         # First try regular push
         result = run_command('git push', cwd=project_path)
         
+        # If it fails due to authentication, update remote with credentials
+        if not result['success'] and ('could not read Username' in result['stderr'] or 'Authentication failed' in result['stderr']):
+            # Get current remote URL
+            remote_result = run_command('git remote get-url origin', cwd=project_path)
+            if remote_result['success'] and 'github.com' in remote_result['stdout']:
+                # Update remote URL with credentials
+                current_url = remote_result['stdout']
+                if not f'{self.github_username}:{self.github_token}@' in current_url:
+                    new_url = current_url.replace('https://', f'https://{self.github_username}:{self.github_token}@')
+                    run_command(f'git remote set-url origin {new_url}', cwd=project_path)
+                    # Retry push
+                    result = run_command('git push', cwd=project_path)
+        
         # If it fails due to no upstream, try setting upstream
         if not result['success'] and 'no upstream branch' in result['stderr']:
             result = run_command('git push --set-upstream origin main', cwd=project_path)
