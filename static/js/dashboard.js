@@ -73,6 +73,7 @@ function renderProjects() {
 
 function getGitStatusColor(git) {
     if (!git?.hasGit) return 'bg-gray-100 text-gray-500';
+    if (git.needsFix) return 'bg-orange-100 text-orange-700';
     if (git.hasUnstagedChanges) return 'bg-red-100 text-red-700';
     if (git.hasStagedChanges) return 'bg-yellow-100 text-yellow-700';
     return 'bg-green-100 text-green-700';
@@ -80,6 +81,7 @@ function getGitStatusColor(git) {
 
 function getGitStatusText(git) {
     if (!git?.hasGit) return '✗ no git';
+    if (git.needsFix) return '⚠️ needs fix';
     if (git.hasUnstagedChanges) return '🔴 unstaged';
     if (git.hasStagedChanges) return '🟡 staged';
     return '✅ clean';
@@ -88,7 +90,20 @@ function getGitStatusText(git) {
 function renderGitWorkflow(project) {
     const git = project.git;
     
-    if (git.hasUnstagedChanges) {
+    // Check if repo needs fixing
+    if (git.needsFix) {
+        return `
+            <div class="space-y-2">
+                <div class="text-xs text-orange-600 mb-1">⚠️ ${git.fixReason}</div>
+                <div class="flex gap-1">
+                    <button onclick="gitAction('${project.path}', 'status')" class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200">Status</button>
+                    <button onclick="gitAction('${project.path}', 'fix')" class="px-4 py-2 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 font-medium">
+                        🔧 Fix Repository
+                    </button>
+                </div>
+            </div>
+        `;
+    } else if (git.hasUnstagedChanges) {
         // Step 1: Has unstaged changes - show Add button
         return `
             <div class="space-y-2">
@@ -184,7 +199,7 @@ async function gitAction(path, action, data = {}) {
         
         if (action === 'status') {
             alert(`Git Status for ${path.split('/').pop()}:\n\n${result.output || 'Working directory clean'}`);
-        } else if (action === 'create-github' && result.success && result.url) {
+        } else if ((action === 'init' || action === 'create-github') && result.success && result.url) {
             showMessage(`Repository created! Opening ${result.url}`, 'success');
             setTimeout(() => {
                 if (confirm('Open GitHub repository in browser?')) {

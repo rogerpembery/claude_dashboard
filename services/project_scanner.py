@@ -18,6 +18,11 @@ def get_git_status(project_path):
     branch_result = run_command('git branch --show-current', cwd=project_path)
     status_result = run_command('git status --porcelain', cwd=project_path)
     remote_result = run_command('git remote -v', cwd=project_path)
+    commit_result = run_command('git log --oneline -1', cwd=project_path)
+    
+    # Check for issues
+    has_commits = commit_result['success'] and commit_result['stdout']
+    has_remote = bool(remote_result['stdout']) if remote_result['success'] else False
     
     # Parse git status to differentiate between staged and unstaged changes
     status_lines = status_result['stdout'].strip().split('\n') if status_result['stdout'] else []
@@ -38,13 +43,27 @@ def get_git_status(project_path):
             if unstaged_status in ['M', 'D'] or line.startswith('??'):
                 has_unstaged_changes = True
     
+    # Determine if repo needs fixing
+    needs_fix = False
+    fix_reason = ""
+    
+    if not has_commits:
+        needs_fix = True
+        fix_reason = "No commits (empty repo)"
+    elif not has_remote:
+        needs_fix = True
+        fix_reason = "No GitHub remote"
+    
     return {
         'hasGit': True,
         'branch': branch_result['stdout'] if branch_result['success'] else 'main',
         'hasChanges': has_unstaged_changes or has_staged_changes,
         'hasUnstagedChanges': has_unstaged_changes,
         'hasStagedChanges': has_staged_changes,
-        'hasRemote': bool(remote_result['stdout']) if remote_result['success'] else False,
+        'hasRemote': has_remote,
+        'hasCommits': has_commits,
+        'needsFix': needs_fix,
+        'fixReason': fix_reason,
         'lastCommit': ''
     }
 
